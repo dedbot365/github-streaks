@@ -25,20 +25,72 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests svgwrite python-dateutil
 
-      - name: Generate all 8 themes
+      - name: Create Streaks directory
+        run: mkdir -p assets/Streaks
+
+      - name: Generate Ocean Blue Dark
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p assets/Streaks
+        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "ocean-blue-dark"
 
-          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "ocean-blue-dark"   && mv assets/streak.svg assets/Streaks/streak-ocean-blue-dark.svg
-          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "ocean-blue-light"  && mv assets/streak.svg assets/Streaks/streak-ocean-blue-light.svg
-          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "emerald-forest"    && mv assets/streak.svg assets/Streaks/streak-emerald-forest.svg
-          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "mint-breeze"       && mv assets/streak.svg assets/Streaks/streak-mint-breeze.svg
-          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "crimson-blaze"     && mv assets/streak.svg assets/Streaks/streak-crimson-blaze.svg
-          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "soft-rose"         && mv assets/streak.svg assets/Streaks/streak-soft-rose.svg
-          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "amber-glow"        && mv assets/streak.svg assets/Streaks/streak-amber-glow.svg
-          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "golden-dawn"       && mv assets/streak.svg assets/Streaks/streak-golden-dawn.svg
+      - name: Move Ocean Blue Dark
+        run: mv assets/streak.svg assets/Streaks/streak-ocean-blue-dark.svg
+
+      - name: Generate Ocean Blue Light
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "ocean-blue-light"
+
+      - name: Move Ocean Blue Light
+        run: mv assets/streak.svg assets/Streaks/streak-ocean-blue-light.svg
+
+      - name: Generate Emerald Forest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "emerald-forest"
+
+      - name: Move Emerald Forest
+        run: mv assets/streak.svg assets/Streaks/streak-emerald-forest.svg
+
+      - name: Generate Mint Breeze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "mint-breeze"
+
+      - name: Move Mint Breeze
+        run: mv assets/streak.svg assets/Streaks/streak-mint-breeze.svg
+
+      - name: Generate Crimson Blaze
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "crimson-blaze"
+
+      - name: Move Crimson Blaze
+        run: mv assets/streak.svg assets/Streaks/streak-crimson-blaze.svg
+
+      - name: Generate Soft Rose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "soft-rose"
+
+      - name: Move Soft Rose
+        run: mv assets/streak.svg assets/Streaks/streak-soft-rose.svg
+
+      - name: Generate Amber Glow
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "amber-glow"
+
+      - name: Move Amber Glow
+        run: mv assets/streak.svg assets/Streaks/streak-amber-glow.svg
+
+      - name: Generate Golden Dawn
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "golden-dawn"
+
+      - name: Move Golden Dawn
+        run: mv assets/streak.svg assets/Streaks/streak-golden-dawn.svg
 
       - name: Commit all generated SVGs
         run: |
