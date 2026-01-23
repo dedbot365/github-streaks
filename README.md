@@ -9,7 +9,7 @@ Automated GitHub Action that tracks your **lifetime contribution data** (not jus
 These stats are generated automatically every day.
 
 <p align="center">
-<strong>Ocean Blue</strong>
+<strong>Ocean Blue</strong><br/><br/>
 
 <!-- Relative paths ensure these images load correctly on forks automatically -->
 <img src="assets/Streaks/streak-ocean-blue-dark.svg" alt="Ocean Blue Dark" width="45%">
@@ -17,13 +17,14 @@ These stats are generated automatically every day.
 </p>
 
 <p align="center">
-<strong>Emerald Forest</strong>
+<strong>Emerald Forest</strong><br/><br/>
 
 <img src="assets/Streaks/streak-emerald-forest-dark.svg" alt="Emerald Forest Dark" width="45%">
 <img src="assets/Streaks/streak-mint-breeze-light.svg" alt="Mint Breeze Light" width="45%">
 </p>
 
 ---
+
 
 ## How to Add This to Your Profile
 
