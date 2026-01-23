@@ -24,7 +24,7 @@ These stats are generated automatically every day.
 </p>
 
 <p align="Center">
-  <strong>Dynamic</strong><br/><br/>
+  <strong>Streak Smart</strong><br/><br/>
   <a href="https://github.com/dedbot365/github-status">
     </a>
 
