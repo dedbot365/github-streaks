@@ -119,23 +119,25 @@ def generate_svg(current, longest, total, username):
     bg.add_stop_color(offset=1, color='#161b22')
     dwg.defs.add(bg)
 
-    # Glow filter for flame
+    # Glow filter – built step by step to avoid constructor issues
     glow = dwg.filter(id='glow', x='-50%', y='-50%', width='200%', height='200%')
-    glow.feGaussianBlur(stdDeviation=2.5, result='blur')
-    merge = glow.feMerge()
-    merge.feMergeNode(in_='blur')
-    merge.feMergeNode(in_='SourceGraphic')
+    glow.add(dwg.feGaussianBlur(stdDeviation=2.5, result='blur'))
+
+    fe_merge = dwg.feMerge()
+    fe_merge.add(dwg.feMergeNode(in_='blur'))
+    fe_merge.add(dwg.feMergeNode(in_='SourceGraphic'))
+    glow.add(fe_merge)
     dwg.defs.add(glow)
 
-    # Flame gradient (nice fire look)
+    # Flame gradient
     flame_grad = dwg.linearGradient(start=(0, 0), end=(0, '100%'), id='flameGrad')
-    flame_grad.add_stop_color(offset=0,    color='#fff176')  # yellow top
+    flame_grad.add_stop_color(offset=0,    color='#fff176')  # yellow
     flame_grad.add_stop_color(offset=0.4,  color='#ff9800')  # orange
     flame_grad.add_stop_color(offset=0.7,  color='#f44336')  # red
     flame_grad.add_stop_color(offset=1,    color='#b71c1c')  # dark red
     dwg.defs.add(flame_grad)
 
-    # Decorative dot on the left side
+    # Decorative left dot
     dwg.add(dwg.circle(center=(30, 40), r=6, fill='#58a6ff', opacity=0.8))
     dwg.add(dwg.circle(center=(30, 40), r=3, fill='white', opacity=0.4))
 
@@ -144,7 +146,7 @@ def generate_svg(current, longest, total, username):
                      fill='#c9d1d9', font_family='system-ui,sans-serif',
                      font_size=28, font_weight='bold', text_anchor='middle'))
 
-    # Improved flame icon
+    # Flame icon
     flame_path_data = (
         "M12 2 Q8 0 4 6 Q2 10 6 16 Q8 20 12 22 "
         "Q16 20 18 16 Q22 10 20 6 Q16 0 12 2 Z "
@@ -155,7 +157,7 @@ def generate_svg(current, longest, total, username):
     flame['filter'] = 'url(#glow)'
     dwg.add(flame)
 
-    # Stats section
+    # Stats
     stats = [
         (current,  "Current Streak",   130),
         (longest,  "Longest Streak",   260),
@@ -175,7 +177,6 @@ def generate_svg(current, longest, total, username):
                      fill='#8b949e', font_family='system-ui,sans-serif',
                      font_size=14, text_anchor='middle'))
 
-    # Save
     os.makedirs('assets', exist_ok=True)
     dwg.save()
     print("SVG saved to assets/streak.svg")
