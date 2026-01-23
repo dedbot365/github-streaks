@@ -50,13 +50,14 @@ Copy the code below and paste it into your profile's `README.md`.
 ---
 
 ### Option A: Markdown (Simple)
-
+```md
 ![My GitHub Streak](https://github.com/YOUR_USERNAME/githubstatuscomponents/blob/main/assets/Streaks/streak-ocean-blue-dark.svg?raw=true)
 
 ---
 
 ### Option B: HTML (Centered & Resizable)
 
+```md
 <p align="center">
   <img src="https://github.com/YOUR_USERNAME/githubstatuscomponents/blob/main/assets/Streaks/streak-ocean-blue-dark.svg?raw=true" alt="GitHub Streak" />
 </p>
