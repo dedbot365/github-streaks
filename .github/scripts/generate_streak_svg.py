@@ -113,26 +113,27 @@ def generate_svg(current_streak, longest_streak, total_contribs, username):
     """Generate the SVG using svgwrite, mimicking the original design."""
     dwg = svgwrite.Drawing('assets/streak.svg', size=('400px', '160px'), profile='tiny')
     
-    # Background (dark gradient)
+    # Background rect + gradient
     dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=12, ry=12,
                      fill='url(#bgGrad)'))
-    dwg.defs.add(dwg.linearGradient(id='bgGrad', gradientUnits='userSpaceOnUse',
-                                    x1=0, y1=0, x2=0, y2='100%',
-                                    stops=[
-                                        ('0%', '#161b22'),
-                                        ('100%', '#0d1117')
-                                    ]))
+    
+    bg_grad = dwg.linearGradient(start=(0, 0), end=(0, 100), id='bgGrad',
+                                 gradientUnits='userSpaceOnUse')
+    bg_grad.add_stop_color(offset='0%', color='#161b22')
+    bg_grad.add_stop_color(offset='100%', color='#0d1117')
+    dwg.defs.add(bg_grad)
     
     # Title
     dwg.add(dwg.text('GitHub Streak', insert=(200, 25), fill='#7dd3fc', font_family='sans-serif',
                      font_size=20, font_weight='bold', text_anchor='middle'))
     
-    # Flame icon (simple SVG path mimicking the original)
-    flame_path = 'M12 2C13.1 2 14 2.9 14 4c0 1-1.1 2.1-2 3-1 .9-2 0-2 0-1-.9-2-2.1-2-3 0-1.1.9-2 2-2zm0 24c-1.1 0-2-.9-2-2 0-1.1.9-2 2-2s2 .9 2 2c0 1.1-.9 2-2 2zM12 12c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z'  # Approximate flame
-    dwg.add(dwg.g(transform='scale(0.05) translate(100, 50)', fill='#f59e0b'))
-    dwg.add(dwg.path(d=flame_path, transform='scale(20) translate(5, 2)'))  # Scaled flame
+    # Flame icon (your existing path — keep as is)
+    flame_path = 'M12 2C13.1 2 14 2.9 14 4c0 1-1.1 2.1-2 3-1 .9-2 0-2 0-1-.9-2-2.1-2-3 0-1.1.9-2 2-2zm0 24c-1.1 0-2-.9-2-2 0-1.1.9-2 2-2s2 .9 2 2c0 1.1-.9 2-2 2zM12 12c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z'
+    flame_group = dwg.g(transform='scale(0.05) translate(100, 50)', fill='#f59e0b')
+    flame_group.add(dwg.path(d=flame_path, transform='scale(20) translate(5, 2)'))
+    dwg.add(flame_group)
     
-    # Stats text
+    # Stats text (your existing code)
     y_offset = 70
     stats = [
         (f'{current_streak}', 'Current Streak'),
@@ -150,12 +151,13 @@ def generate_svg(current_streak, longest_streak, total_contribs, username):
     dwg.add(dwg.text(f'@{username}', insert=(200, 145), fill='#8b949e', font_family='sans-serif',
                      font_size=12, text_anchor='middle'))
     
-    # Optional: Add a simple calendar bar (last 7 days, for visual)
+    # Optional recent calendar bars (your code — keep as is)
     bar_y = 100
+    # Assuming daily_counts is available in scope or passed; if not, remove or adjust
     recent_dates = sorted(daily_counts.keys())[-7:] if 'daily_counts' in globals() else []
-    for i, date_str in enumerate(recent_dates[-7:]):
+    for i, date_str in enumerate(recent_dates):
         contrib = daily_counts.get(date_str, 0)
-        height = min(20, contrib * 2)  # Scale height based on contribs
+        height = min(20, contrib * 2)
         color = '#0e4429' if contrib > 0 else '#161b22'
         dwg.add(dwg.rect(insert=(40 + i * 25, bar_y - height), size=(20, height),
                          rx=3, fill=color))
