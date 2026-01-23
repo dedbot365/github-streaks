@@ -13,10 +13,5 @@
 </p>
 
 <p align="center">
-  <img src="https://github.com/dedbot365/githubstatuscomponents/raw/main/assets/Streaks/streak-amber-glow-dark.svg" width="240"/>
-  <img src="https://github.com/dedbot365/githubstatuscomponents/raw/main/assets/Streaks/streak-golden-dawn-light.svg" width="240"/>
-</p>
-
-<p align="center">
   <em>8 beautiful themes • Updated daily</em>
 </p>
