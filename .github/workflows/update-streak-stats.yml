@@ -1,12 +1,12 @@
-name: Update Streak Stats
+name: Update Streak Stats – Multi-Theme
 
 permissions:
   contents: write
 
 on:
   schedule:
-    - cron: '0 0 * * *'    # daily at midnight UTC
-  workflow_dispatch:       # allows manual trigger
+    - cron: '0 0 * * *'     # daily at midnight UTC
+  workflow_dispatch:
 
 jobs:
   update-streak:
@@ -25,15 +25,42 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests svgwrite python-dateutil
 
-      - name: Generate and commit SVG
+      - name: Generate all 8 themes safely
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}"
+        run: |
+          mkdir -p assets/Streaks
 
-      - name: Commit changes
+          # Theme list (slug: name)
+          declare -A themes=(
+            ["ocean-blue-dark"]="Ocean Blue (Dark)"
+            ["ocean-blue-light"]="Ocean Blue (Light)"
+            ["emerald-forest-dark"]="Emerald Forest (Dark)"
+            ["mint-breeze-light"]="Mint Breeze (Light)"
+            ["crimson-blaze-dark"]="Crimson Blaze (Dark)"
+            ["soft-rose-light"]="Soft Rose (Light)"
+            ["amber-glow-dark"]="Amber Glow (Dark)"
+            ["golden-dawn-light"]="Golden Dawn (Light)"
+          )
+
+          for slug in "${!themes[@]}"; do
+            echo "Generating theme: ${themes[$slug]} ($slug)"
+            python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "$slug"
+
+            if [ -f assets/streak.svg ]; then
+              mv assets/streak.svg "assets/Streaks/streak-$slug.svg"
+              echo "→ Saved: assets/Streaks/streak-$slug.svg"
+            else
+              echo "Warning: No SVG generated for $slug"
+            fi
+          done
+
+          echo "All themes processed."
+
+      - name: Commit all generated SVGs
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add assets/streak.svg
-          git diff --staged --quiet || git commit -m "Update streak stats [$(date +%Y-%m-%d)]"
+          git add assets/Streaks/*.svg
+          git diff --staged --quiet || git commit -m "Update streak stats – 8 themes [$(date +%Y-%m-%d)]"
           git push
