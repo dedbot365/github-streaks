@@ -1,4 +1,5 @@
 import requests
+import sys
 import svgwrite
 import os
 from datetime import datetime, timedelta
@@ -157,11 +158,18 @@ def generate_svg(current_streak, longest_streak, total_contribs, username):
     dwg.save()
 
 if __name__ == '__main__':
-    username = os.getenv('GITHUB_USERNAME')
-    if not username:
-        raise ValueError("Set GITHUB_USERNAME env var")
+    if len(sys.argv) < 2:
+        raise ValueError("Username (repository owner) must be provided as first argument")
+
+    username = sys.argv[1].strip()
+    print(f"Generating streak stats for GitHub user: {username}")
+
+    token = os.getenv("GITHUB_TOKEN")
+    if not token or len(token) < 10:
+        raise ValueError("GITHUB_TOKEN environment variable is missing or invalid!")
+    print(f"DEBUG: Token prefix = {token[:4]}... (length: {len(token)})")
 
     daily_counts, total_contribs = fetch_contributions(username)
-    current, longest, _ = calculate_streaks(daily_counts)  # Ignore the old total, use GraphQL one
+    current, longest, _ = calculate_streaks(daily_counts)
     generate_svg(current, longest, total_contribs, username)
     print(f"Generated SVG: Current={current}, Longest={longest}, Total={total_contribs}")
