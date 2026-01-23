@@ -1,10 +1,12 @@
 name: Update Streak Stats
 
+permissions:
+  contents: write
+
 on:
   schedule:
-    # Run daily at midnight UTC
-    - cron: '0 0 * * *'
-  workflow_dispatch:  # Allows manual trigger
+    - cron: '0 0 * * *'    # daily at midnight UTC
+  workflow_dispatch:       # manual trigger
 
 jobs:
   update-streak:
@@ -12,8 +14,6 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # For pushing changes
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -27,17 +27,14 @@ jobs:
 
       - name: Generate and commit SVG
         env:
-          GITHUB_USERNAME: YOUR_USERNAME  # e.g., SUBU88499322
-        run: python .github/scripts/generate_streak_svg.py
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}"
 
       - name: Commit changes
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add assets/streak.svg
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Update streak stats [$(date +%Y-%m-%d)]"
-            git push
-          fi
+          git diff --staged --quiet || git commit -m "Update streak stats [$(date +%Y-%m-%d)]"
+          git push
