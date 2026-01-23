@@ -1,12 +1,12 @@
-name: Update Streak Stats – 4 Themes
+name: Update Streak Stats (Adaptive)
 
 permissions:
   contents: write
 
 on:
   schedule:
-    - cron: '0 0 * * *'     # daily at midnight UTC
-  workflow_dispatch:
+    - cron: '0 0 * * *'     # Daily at midnight UTC
+  workflow_dispatch:        # Manual trigger
 
 jobs:
   update-streak:
@@ -25,31 +25,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests svgwrite python-dateutil
 
-      - name: Generate all 4 themes safely
+      - name: Generate Adaptive SVG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p assets/Streaks
+          
+          # Run the script (No theme argument needed anymore)
+          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}"
+          
+          echo "✅ SVG Generation Complete"
 
-          # Theme list
-          themes=("ocean-blue-dark" "ocean-blue-light" "emerald-forest-dark" "mint-breeze-light")
-
-          for theme in "${themes[@]}"; do
-            echo "Generating: $theme"
-            python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}" "$theme"
-
-            if [ -f assets/streak.svg ]; then
-              mv assets/streak.svg "assets/Streaks/streak-$theme.svg"
-              echo "→ Saved: assets/Streaks/streak-$theme.svg"
-            else
-              echo "Warning: No SVG generated for $theme"
-            fi
-          done
-
-      - name: Commit all generated SVGs
+      - name: Commit and Push
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add assets/Streaks/*.svg
-          git diff --staged --quiet || git commit -m "Update streak stats – 4 themes [$(date +%Y-%m-%d)]"
+          
+          # Add the new smart streak file
+          git add assets/Streaks/streak-smart.svg
+          
+          # Commit only if changed
+          git diff --staged --quiet || git commit -m "Update streak stats [$(date +%Y-%m-%d)]"
           git push
