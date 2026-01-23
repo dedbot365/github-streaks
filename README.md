@@ -23,6 +23,15 @@ These stats are generated automatically every day.
 <img src="assets/Streaks/streak-mint-breeze-light.svg" alt="Mint Breeze Light" width="45%">
 </p>
 
+<p align="Center">
+  <strong>Dynamic</strong><br/><br/>
+  <a href="https://github.com/dedbot365/github-status">
+    </a>
+
+  <img src="assets/Streaks/streak-smart.svg" alt="GitHub Streak" />
+  
+</p>
+
 ---
 
 
