@@ -160,8 +160,8 @@ if __name__ == '__main__':
     username = os.getenv('GITHUB_USERNAME')
     if not username:
         raise ValueError("Set GITHUB_USERNAME env var")
-    
-    daily_counts = fetch_contributions(username)
-    current, longest, total = calculate_streaks(daily_counts)
-    generate_svg(current, longest, total, username)
-    print(f"Generated SVG: Current={current}, Longest={longest}, Total={total}")
+
+    daily_counts, total_contribs = fetch_contributions(username)
+    current, longest, _ = calculate_streaks(daily_counts)  # Ignore the old total, use GraphQL one
+    generate_svg(current, longest, total_contribs, username)
+    print(f"Generated SVG: Current={current}, Longest={longest}, Total={total_contribs}")
