@@ -114,15 +114,21 @@ def generate_svg(current_streak, longest_streak, total_contribs, username):
     dwg = svgwrite.Drawing('assets/streak.svg', size=('400px', '160px'), profile='tiny')
     
     # Background rect + gradient
+    # Background (dark gradient)
     dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=12, ry=12,
                      fill='url(#bgGrad)'))
     
-    bg_grad = dwg.linearGradient(start=(0, 0), end=(0, 100), id='bgGrad',
-                                 gradientUnits='userSpaceOnUse')
-    bg_grad.add_stop_color(offset='0%', color='#161b22')
-    bg_grad.add_stop_color(offset='100%', color='#0d1117')
-    dwg.defs.add(bg_grad)
+    bg_grad = dwg.linearGradient(
+        start=(0, 0),
+        end=(0, '100%'),  # percentage for end is fine here
+        id='bgGrad',
+        gradientUnits='userSpaceOnUse'
+    )
     
+    bg_grad.add_stop_color(offset=0, color='#161b22')
+    bg_grad.add_stop_color(offset=1, color='#0d1117')
+    
+    dwg.defs.add(bg_grad)
     # Title
     dwg.add(dwg.text('GitHub Streak', insert=(200, 25), fill='#7dd3fc', font_family='sans-serif',
                      font_size=20, font_weight='bold', text_anchor='middle'))
