@@ -68,7 +68,6 @@ def fetch_all_contributions(username):
 
     print(f"Fetching history from {start_year} to {current_year}...")
     for year in range(start_year, current_year + 1):
-        # print(f" - Fetching {year}...") # Reduce noise in logs
         calendar = fetch_contributions_for_year(username, year)
         total_lifetime += calendar['totalContributions']
         for week in calendar['weeks']:
@@ -76,7 +75,7 @@ def fetch_all_contributions(username):
                 count = day['contributionCount']
                 if count > 0:
                     all_daily_counts[day['date']] = count
-        time.sleep(0.1) # Brief pause for API niceness
+        time.sleep(0.1)
 
     return all_daily_counts, total_lifetime, created_at
 
@@ -137,26 +136,28 @@ def calculate_streaks(daily_counts):
 
 def generate_smart_svg(current, longest, total, longest_range, start_date_obj):
     """
-    Generates a single SVG that adapts to Light/Dark mode using CSS media queries.
-    Uses GitHub Default Colors.
+    Generates a single SVG that adapts to Ocean Blue Light/Dark mode.
     """
     
-    # Define GitHub-like Colors
-    # Light Mode
-    L_BG = "#FFFFFF"
-    L_BORDER = "#D0D7DE"
-    L_TEXT = "#24292F"
-    L_LABEL = "#57606A"
-    L_ACCENT = "#0969DA"  # GitHub Blue
-    L_FIRE = "#D95641"    # Burnt Orange
+    # --- Theme Definitions ---
     
-    # Dark Mode
-    D_BG = "#0D1117"
-    D_BORDER = "#30363D"
-    D_TEXT = "#C9D1D9"
-    D_LABEL = "#8B949E"
-    D_ACCENT = "#58A6FF"  # Lighter Blue
-    D_FIRE = "#D95641"    # Same Orange
+    # Ocean Blue Light (Default)
+    L_BG = "#F8FAFC"
+    L_BORDER = "#CBD5E1"
+    L_ACCENT = "#3B82F6"   # Main Blue
+    L_CURRENT = "#8B5CF6"  # Purple for Current Streak
+    L_LABEL = "#1D4ED8"    # Darker Blue for Labels
+    L_RANGE = "#10B981"    # Green for Dates
+    L_FLAME = "#3B82F6"
+    
+    # Ocean Blue Dark (Dark Mode Override)
+    D_BG = "#1A1B27"
+    D_BORDER = "#E4E2E2"
+    D_ACCENT = "#5B9EFF"   # Lighter Blue
+    D_CURRENT = "#A78BFA"  # Lighter Purple
+    D_LABEL = "#5B9EFF"    # Matching Accent
+    D_RANGE = "#34D399"    # Lighter Green
+    D_FLAME = "#5B9EFF"
 
     formatted_start_date = start_date_obj.strftime("%b %d, %Y")
     lifetime_label = f"{formatted_start_date} - Present"
@@ -175,26 +176,26 @@ def generate_smart_svg(current, longest, total, longest_range, start_date_obj):
             100% {{ opacity: 1; }}
         }}
         
-        /* Base (Light Mode) */
+        /* Base (Light Mode - Ocean Blue Light) */
         .bg {{ fill: {L_BG}; stroke: {L_BORDER}; }}
         .divider {{ stroke: {L_BORDER}; }}
-        .text-main {{ fill: {L_ACCENT}; font-family: 'Segoe UI', Ubuntu, sans-serif; font-weight: 700; font-size: 28px; }}
+        .text-accent {{ fill: {L_ACCENT}; font-family: 'Segoe UI', Ubuntu, sans-serif; font-weight: 700; font-size: 28px; }}
         .text-label {{ fill: {L_LABEL}; font-family: 'Segoe UI', Ubuntu, sans-serif; font-size: 14px; }}
-        .text-range {{ fill: {L_LABEL}; font-family: 'Segoe UI', Ubuntu, sans-serif; font-size: 12px; }}
+        .text-range {{ fill: {L_RANGE}; font-family: 'Segoe UI', Ubuntu, sans-serif; font-size: 12px; }}
+        .text-current {{ fill: {L_CURRENT}; font-family: 'Segoe UI', Ubuntu, sans-serif; font-weight: 700; font-size: 28px; }}
         .ring {{ stroke: {L_ACCENT}; }}
-        .fire {{ fill: {L_FIRE}; }}
-        .curr-text {{ fill: {L_ACCENT}; }}
+        .fire {{ fill: {L_FLAME}; }}
         
-        /* Dark Mode Override */
+        /* Dark Mode Override (Ocean Blue Dark) */
         @media (prefers-color-scheme: dark) {{
             .bg {{ fill: {D_BG}; stroke: {D_BORDER}; }}
             .divider {{ stroke: {D_BORDER}; }}
-            .text-main {{ fill: {D_ACCENT}; }}
+            .text-accent {{ fill: {D_ACCENT}; }}
             .text-label {{ fill: {D_LABEL}; }}
-            .text-range {{ fill: {D_LABEL}; }}
+            .text-range {{ fill: {D_RANGE}; }}
+            .text-current {{ fill: {D_CURRENT}; }}
             .ring {{ stroke: {D_ACCENT}; }}
-            .fire {{ fill: {D_FIRE}; }}
-            .curr-text {{ fill: {D_ACCENT}; }}
+            .fire {{ fill: {D_FLAME}; }}
         }}
     """
     dwg.defs.add(dwg.style(css_styles))
@@ -221,7 +222,7 @@ def generate_smart_svg(current, longest, total, longest_range, start_date_obj):
     main.add(dwg.line(start=(330, 28), end=(330, 170), stroke_width=1, class_="divider"))
 
     # --- LEFT: Total Contributions ---
-    main.add(dwg.text(str(total), insert=(82.5, 80), text_anchor='middle', class_="text-main",
+    main.add(dwg.text(str(total), insert=(82.5, 80), text_anchor='middle', class_="text-accent",
                       style='opacity: 0; animation: fadein 0.5s linear forwards 0.6s'))
     main.add(dwg.text('Total Contributions', insert=(82.5, 116), text_anchor='middle', class_="text-label",
                       style='opacity: 0; animation: fadein 0.5s linear forwards 0.7s'))
@@ -229,8 +230,8 @@ def generate_smart_svg(current, longest, total, longest_range, start_date_obj):
                       style='opacity: 0; animation: fadein 0.5s linear forwards 0.8s'))
 
     # --- CENTER: Current Streak ---
-    main.add(dwg.text('Current Streak', insert=(247.5, 140), text_anchor='middle', class_="text-label",
-                      style='opacity: 0; animation: fadein 0.5s linear forwards 0.9s', font_weight='700'))
+    main.add(dwg.text('Current Streak', insert=(247.5, 140), text_anchor='middle', class_="text-current",
+                      style='opacity: 0; animation: fadein 0.5s linear forwards 0.9s; font-size: 14px;')) # Reduced font size for label
     main.add(dwg.text(datetime.now().strftime("%b %d"), insert=(247.5, 166), text_anchor='middle', class_="text-range",
                       style='opacity: 0; animation: fadein 0.5s linear forwards 0.9s'))
 
@@ -247,11 +248,11 @@ def generate_smart_svg(current, longest, total, longest_range, start_date_obj):
     main.add(flame_g)
 
     # Current Streak Number
-    main.add(dwg.text(str(current), insert=(247.5, 80), text_anchor='middle', class_="text-main curr-text",
+    main.add(dwg.text(str(current), insert=(247.5, 80), text_anchor='middle', class_="text-current",
                       style='animation: currstreak 0.6s linear forwards'))
 
     # --- RIGHT: Longest Streak ---
-    main.add(dwg.text(str(longest), insert=(412.5, 80), text_anchor='middle', class_="text-main",
+    main.add(dwg.text(str(longest), insert=(412.5, 80), text_anchor='middle', class_="text-accent",
                       style='opacity: 0; animation: fadein 0.5s linear forwards 1.2s'))
     main.add(dwg.text('Longest Streak', insert=(412.5, 116), text_anchor='middle', class_="text-label",
                       style='opacity: 0; animation: fadein 0.5s linear forwards 1.3s'))
@@ -268,7 +269,7 @@ if __name__ == '__main__':
         raise ValueError("Provide username as first argument")
     
     username = sys.argv[1].strip()
-    print(f"User: {username} | Mode: Smart (Adaptive)")
+    print(f"User: {username} | Mode: Ocean Blue (Adaptive)")
 
     daily_counts, total, created_at_date = fetch_all_contributions(username)
     print(f"Total Lifetime: {total} | Active days: {len(daily_counts)}")
