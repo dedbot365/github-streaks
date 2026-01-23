@@ -21,10 +21,3 @@ These streak stats are automatically updated every day.
 <p align="center">
   <em>4 beautiful styles • Auto-updated daily • Powered by GitHub Actions</em>
 </p>
-
-
-## 🔥 My GitHub Streak
-
-<p align="center">
-  <img src="assets/Streaks/streak-ocean-blue-dark.svg" alt="GitHub Streak" />
-</p>
