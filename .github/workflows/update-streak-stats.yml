@@ -6,7 +6,7 @@ permissions:
 on:
   schedule:
     - cron: '0 0 * * *'    # daily at midnight UTC
-  workflow_dispatch:       # manual trigger
+  workflow_dispatch:       # allows manual trigger
 
 jobs:
   update-streak:
@@ -28,8 +28,7 @@ jobs:
       - name: Generate and commit SVG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}"
+        run: python .github/scripts/generate_streak_svg.py "${{ github.repository_owner }}"
 
       - name: Commit changes
         run: |
