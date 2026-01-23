@@ -2,10 +2,48 @@ import requests
 import json
 import sys
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, date
 import svgwrite
+import time
 
-def fetch_contributions(username):
+def get_headers():
+    token = os.getenv("GITHUB_TOKEN")
+    if not token or len(token) < 10:
+        raise ValueError("GITHUB_TOKEN missing or invalid!")
+    return {
+        'Authorization': f'Bearer {token}',
+        'User-Agent': 'Streak-Generator'
+    }
+
+def run_graphql_query(query, variables):
+    url = "https://api.github.com/graphql"
+    response = requests.post(url, json={'query': query, 'variables': variables}, headers=get_headers())
+    
+    if response.status_code != 200:
+        raise Exception(f"HTTP {response.status_code}: {response.text}")
+    
+    data = response.json()
+    if 'errors' in data:
+        raise Exception(f"GraphQL errors: {json.dumps(data['errors'], indent=2)}")
+    
+    return data
+
+def fetch_user_creation_date(username):
+    query = """
+    query($userName: String!) {
+      user(login: $userName) {
+        createdAt
+      }
+    }
+    """
+    data = run_graphql_query(query, {"userName": username})
+    user_data = data.get('data', {}).get('user')
+    if not user_data:
+        raise Exception(f"User '{username}' not found")
+    
+    return datetime.fromisoformat(user_data['createdAt'].replace('Z', '+00:00'))
+
+def fetch_contributions_for_year(username, year):
     query = """
     query($userName: String!, $from: DateTime!, $to: DateTime!) {
       user(login: $userName) {
@@ -23,86 +61,116 @@ def fetch_contributions(username):
       }
     }
     """
-
-    to_date = datetime.utcnow()
-    from_date = to_date - timedelta(days=365)
-
+    # Define start and end of the year
+    start_date = f"{year}-01-01T00:00:00Z"
+    end_date = f"{year}-12-31T23:59:59Z"
+    
     variables = {
         "userName": username,
-        "from": from_date.isoformat() + "Z",
-        "to": to_date.isoformat() + "Z"
+        "from": start_date,
+        "to": end_date
     }
+    
+    data = run_graphql_query(query, variables)
+    return data['data']['user']['contributionsCollection']['contributionCalendar']
 
-    token = os.getenv("GITHUB_TOKEN")
-    if not token or len(token) < 10:
-        raise ValueError("GITHUB_TOKEN missing or invalid!")
+def fetch_all_contributions(username):
+    # 1. Get account creation date
+    created_at = fetch_user_creation_date(username)
+    start_year = created_at.year
+    current_year = datetime.now().year
+    
+    total_lifetime = 0
+    all_daily_counts = {}
 
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'User-Agent': 'Streak-Generator'
-    }
+    print(f"Fetching history from {start_year} to {current_year}...")
 
-    url = "https://api.github.com/graphql"
-    response = requests.post(url, json={'query': query, 'variables': variables}, headers=headers)
+    # 2. Loop through every year
+    for year in range(start_year, current_year + 1):
+        print(f" - Fetching {year}...")
+        calendar = fetch_contributions_for_year(username, year)
+        
+        # Add to total
+        total_lifetime += calendar['totalContributions']
+        
+        # Collect daily counts
+        for week in calendar['weeks']:
+            for day in week['contributionDays']:
+                count = day['contributionCount']
+                if count > 0:
+                    all_daily_counts[day['date']] = count
+        
+        # Respect API rate limits (mild pause)
+        time.sleep(0.5)
 
-    if response.status_code != 200:
-        raise Exception(f"HTTP {response.status_code}: {response.text}")
-
-    data = response.json()
-    if 'errors' in data:
-        raise Exception(f"GraphQL errors: {json.dumps(data['errors'], indent=2)}")
-
-    user_data = data.get('data', {}).get('user')
-    if not user_data:
-        raise Exception(f"User '{username}' not found")
-
-    calendar = user_data['contributionsCollection']['contributionCalendar']
-    total = calendar['totalContributions']
-
-    daily_counts = {}
-    for week in calendar['weeks']:
-        for day in week['contributionDays']:
-            count = day['contributionCount']
-            if count > 0:
-                daily_counts[day['date'][:10]] = count
-
-    return daily_counts, total
-
+    return all_daily_counts, total_lifetime, created_at
 
 def calculate_streaks(daily_counts):
     if not daily_counts:
-        return 0, 0, datetime.now().strftime("%b %d, %Y")
+        return 0, 0, datetime.now().strftime("%b %d, %Y"), "N/A"
 
     dates = sorted(daily_counts.keys())
+    today = datetime.now().date()
+    
+    # --- Calculate Current Streak ---
+    current_streak = 0
+    # We check from the most recent contribution backwards
+    # We allow a gap of today if today hasn't been contributed to yet
+    last_contribution_date_str = dates[-1]
+    last_contribution_date = datetime.strptime(last_contribution_date_str, '%Y-%m-%d').date()
+    
+    # If the last contribution was yesterday or today, the streak is alive
+    diff = (today - last_contribution_date).days
+    
+    if diff <= 1:
+        # Streak is active, count backwards
+        current_streak = 1
+        check_date = last_contribution_date
+        # Check previous dates in the sorted list
+        for i in range(len(dates) - 2, -1, -1):
+            prev_date = datetime.strptime(dates[i], '%Y-%m-%d').date()
+            if (check_date - prev_date).days == 1:
+                current_streak += 1
+                check_date = prev_date
+            else:
+                break
+    else:
+        current_streak = 0
 
-    current = 0
-    for date_str in reversed(dates):
-        date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        delta = (datetime.now().date() - date).days
-        if delta <= current:
-            current += 1
-        else:
-            break
+    # --- Calculate Longest Streak ---
+    longest_streak = 0
+    current_count = 0
+    prev_date = None
+    longest_start_date = None
+    longest_end_date = None
+    
+    temp_start = None
 
-    longest = 0
-    streak = 0
-    prev = None
-    longest_start = ""
-    longest_end = ""
     for date_str in dates:
-        date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        if prev is None or (date - prev).days == 1:
-            streak += 1
-            if streak > longest:
-                longest = streak
-                longest_start = prev.strftime("%b %d, %Y") if prev else date.strftime("%b %d, %Y")
-                longest_end = date.strftime("%b %d, %Y")
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        
+        if prev_date and (date_obj - prev_date).days == 1:
+            current_count += 1
         else:
-            streak = 1
-        prev = date
+            current_count = 1
+            temp_start = date_obj
+            
+        if current_count > longest_streak:
+            longest_streak = current_count
+            longest_start_date = temp_start
+            longest_end_date = date_obj
+            
+        prev_date = date_obj
 
-    return current, longest, f"{longest_start} - {longest_end}" if longest_start else "N/A"
+    # Format the range string
+    if longest_start_date and longest_end_date:
+        s_fmt = longest_start_date.strftime("%b %d, %Y")
+        e_fmt = longest_end_date.strftime("%b %d, %Y")
+        longest_range_str = f"{s_fmt} - {e_fmt}"
+    else:
+        longest_range_str = "N/A"
 
+    return current_streak, longest_streak, longest_range_str
 
 def get_theme_colors(theme_slug):
     themes = {
@@ -145,9 +213,12 @@ def get_theme_colors(theme_slug):
     }
     return themes.get(theme_slug, themes['ocean-blue-dark'])
 
-
-def generate_svg(current, longest, total, username, longest_range, theme_slug):
+def generate_svg(current, longest, total, username, longest_range, start_date_obj, theme_slug):
     colors = get_theme_colors(theme_slug)
+
+    # Calculate readable start date for the label
+    formatted_start_date = start_date_obj.strftime("%b %d, %Y")
+    lifetime_label = f"{formatted_start_date} - Present"
 
     dwg = svgwrite.Drawing('assets/streak.svg', size=('495px', '195px'), viewBox='0 0 495 195', debug=False)
 
@@ -195,8 +266,9 @@ def generate_svg(current, longest, total, username, longest_range, theme_slug):
                          style='opacity: 0; animation: fadein 0.5s linear forwards 0.7s'))
     main.add(label_g)
 
+    # Dynamic Date Range (Lifetime)
     range_g = dwg.g(transform='translate(82.5, 114)')
-    range_g.add(dwg.text('May 9, 2019 - Present', insert=(0, 32), fill=colors['range'],
+    range_g.add(dwg.text(lifetime_label, insert=(0, 32), fill=colors['range'],
                          font_family='"Segoe UI", Ubuntu, sans-serif',
                          font_size=12, text_anchor='middle',
                          style='opacity: 0; animation: fadein 0.5s linear forwards 0.8s'))
@@ -258,13 +330,12 @@ def generate_svg(current, longest, total, username, longest_range, theme_slug):
                               style='opacity: 0; animation: fadein 0.5s linear forwards 1.4s'))
     main.add(long_range_g)
 
-    # Save directly to final location
+    # Save
     os.makedirs('assets/Streaks', exist_ok=True)
     final_path = f'assets/Streaks/streak-{theme_slug}.svg'
     dwg.filename = final_path
     dwg.save()
     print(f"Saved: {final_path}")
-
 
 if __name__ == '__main__':
     theme_slug = 'ocean-blue-dark'
@@ -277,11 +348,14 @@ if __name__ == '__main__':
     username = sys.argv[1].strip()
     print(f"User: {username} | Theme: {theme_slug}")
 
-    daily_counts, total = fetch_contributions(username)
-    print(f"Total: {total} | Active days: {len(daily_counts)}")
+    # Fetch lifetime data
+    daily_counts, total, created_at_date = fetch_all_contributions(username)
+    print(f"Total Lifetime: {total} | Active days: {len(daily_counts)}")
 
+    # Calculate streaks on full history
     current, longest, longest_range = calculate_streaks(daily_counts)
     print(f"Current: {current} | Longest: {longest} | Range: {longest_range}")
 
-    generate_svg(current, longest, total, username, longest_range, theme_slug)
+    # Generate SVG with correct start date
+    generate_svg(current, longest, total, username, longest_range, created_at_date, theme_slug)
     print("Done!")
