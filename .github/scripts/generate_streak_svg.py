@@ -4,41 +4,71 @@ import os
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta  # pip install python-dateutil (but it's often pre-installed; if not, add to workflow)
 
-def fetch_contributions(username):
-    """Fetch contribution calendar data for the last year."""
-    end_date = datetime.now().date()
-    start_date = end_date - relativedelta(years=1)
-    
-    url = f"https://api.github.com/users/{username}/events/public"
-    headers = {'User-Agent': 'Streak-Stats-Generator'}
-    
-    # Fetch events (we'll count daily contributions from here)
-    all_events = []
-    page = 1
-    while True:
-        params = {'per_page': 100, 'page': page}
-        response = requests.get(url, headers=headers, params=params)
-        if response.status_code != 200:
-            raise Exception(f"API error: {response.status_code}")
-        events = response.json()
-        if not events:
-            break
-        all_events.extend(events)
-        page += 1
-    
-    # Aggregate daily counts (simple: count unique days with events)
-    daily_counts = {}
-    for event in all_events:
-        if 'created_at' in event:
-            date_str = event['created_at'][:10]  # YYYY-MM-DD
-            daily_counts[date_str] = daily_counts.get(date_str, 0) + 1
-    
-    # Filter to last year
-    filtered_counts = {date: count for date, count in daily_counts.items()
-                       if start_date <= datetime.strptime(date, '%Y-%m-%d').date() <= end_date}
-    
-    return filtered_counts
+import requests
+import json
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
+def fetch_contributions(username):
+    """Fetch contribution calendar data using GitHub GraphQL API."""
+    query = """
+    query($userName: String!, $from: DateTime!, $to: DateTime!) {
+      user(login: $userName) {
+        contributionsCollection(from: $from, to: $to) {
+          contributionCalendar {
+            totalContributions
+            weeks {
+              contributionDays {
+                date
+                contributionCount
+              }
+            }
+          }
+        }
+      }
+    }
+    """
+
+    # Calculate dates: last ~365 days
+    to_date = datetime.utcnow()
+    from_date = to_date - relativedelta(years=1) - timedelta(days=10)  # slight buffer
+
+    variables = {
+        "userName": username,
+        "from": from_date.isoformat() + "Z",
+        "to": to_date.isoformat() + "Z"
+    }
+
+    headers = {
+        'Authorization': f'Bearer {os.getenv("GITHUB_TOKEN")}',  # Use the built-in token
+        'User-Agent': 'Streak-Stats-Generator'
+    }
+
+    url = "https://api.github.com/graphql"
+    response = requests.post(url, json={'query': query, 'variables': variables}, headers=headers)
+
+    if response.status_code != 200:
+        raise Exception(f"GraphQL API error: {response.status_code} - {response.text}")
+
+    data = response.json()
+    if 'errors' in data:
+        raise Exception(f"GraphQL errors: {json.dumps(data['errors'])}")
+
+    user_data = data.get('data', {}).get('user')
+    if not user_data:
+        raise Exception("User not found or no contribution data")
+
+    calendar = user_data['contributionsCollection']['contributionCalendar']
+    total_contribs = calendar['totalContributions']
+
+    # Build daily_counts dict: date_str -> count
+    daily_counts = {}
+    for week in calendar['weeks']:
+        for day in week['contributionDays']:
+            if day['contributionCount'] > 0:
+                daily_counts[day['date'][:10]] = day['contributionCount']  # YYYY-MM-DD
+
+    return daily_counts, total_contribs
 def calculate_streaks(daily_counts):
     """Calculate current streak, longest streak, and total contributions."""
     dates = sorted(daily_counts.keys())
