@@ -30,9 +30,8 @@ def fetch_contributions(username):
     }
     """
 
-    # Calculate dates: last ~365 days
     to_date = datetime.utcnow()
-    from_date = to_date - relativedelta(years=1) - timedelta(days=10)  # slight buffer
+    from_date = to_date - timedelta(days=365)  # Fixed: exactly 365 days
 
     variables = {
         "userName": username,
@@ -40,8 +39,13 @@ def fetch_contributions(username):
         "to": to_date.isoformat() + "Z"
     }
 
+    token = os.getenv("GITHUB_TOKEN")
+    if not token or len(token) < 10:
+        raise ValueError("GITHUB_TOKEN environment variable is missing or invalid!")
+    print(f"DEBUG: Token prefix = {token[:4]}... (length: {len(token)})")
+
     headers = {
-        'Authorization': f'Bearer {os.getenv("GITHUB_TOKEN")}',  # Use the built-in token
+        'Authorization': f'Bearer {token}',
         'User-Agent': 'Streak-Stats-Generator'
     }
 
@@ -49,25 +53,26 @@ def fetch_contributions(username):
     response = requests.post(url, json={'query': query, 'variables': variables}, headers=headers)
 
     if response.status_code != 200:
-        raise Exception(f"GraphQL API error: {response.status_code} - {response.text}")
+        raise Exception(f"GraphQL HTTP error: {response.status_code} - {response.text}")
 
     data = response.json()
     if 'errors' in data:
-        raise Exception(f"GraphQL errors: {json.dumps(data['errors'])}")
+        raise Exception(f"GraphQL errors: {json.dumps(data['errors'], indent=2)}")
 
     user_data = data.get('data', {}).get('user')
     if not user_data:
-        raise Exception("User not found or no contribution data")
+        raise Exception(f"User '{username}' not found or no contribution data available")
 
     calendar = user_data['contributionsCollection']['contributionCalendar']
     total_contribs = calendar['totalContributions']
 
-    # Build daily_counts dict: date_str -> count
     daily_counts = {}
     for week in calendar['weeks']:
         for day in week['contributionDays']:
-            if day['contributionCount'] > 0:
-                daily_counts[day['date'][:10]] = day['contributionCount']  # YYYY-MM-DD
+            count = day['contributionCount']
+            if count > 0:
+                date_str = day['date'][:10]  # YYYY-MM-DD
+                daily_counts[date_str] = count
 
     return daily_counts, total_contribs
 def calculate_streaks(daily_counts):
