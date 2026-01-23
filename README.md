@@ -6,30 +6,21 @@ Automated GitHub Action that tracks your **lifetime contribution data** (not jus
 
 ## Theme Showcase
 
-These stats are generated automatically every day.
+These stats are generated automatically every day. All themes are **Adaptive**, meaning they automatically switch colors based on your system's Light/Dark mode settings.
 
 <p align="center">
-<strong>Ocean Blue</strong><br/><br/>
-
-<!-- Relative paths ensure these images load correctly on forks automatically -->
-<img src="assets/Streaks/streak-ocean-blue-dark.svg" alt="Ocean Blue Dark" width="45%">
-<img src="assets/Streaks/streak-ocean-blue-light.svg" alt="Ocean Blue Light" width="45%">
+  <strong>1. Ocean Blue</strong><br/>
+  <img src="assets/Streaks/streak-ocean.svg" alt="Ocean Blue Streak">
 </p>
 
 <p align="center">
-<strong>Emerald Forest</strong><br/><br/>
-
-<img src="assets/Streaks/streak-emerald-forest-dark.svg" alt="Emerald Forest Dark" width="45%">
-<img src="assets/Streaks/streak-mint-breeze-light.svg" alt="Mint Breeze Light" width="45%">
+  <strong>2. Forest Green</strong><br/>
+  <img src="assets/Streaks/streak-forest.svg" alt="Forest Green Streak">
 </p>
 
-<p align="Center">
-  <strong>Streak Smart</strong><br/><br/>
-  <a href="https://github.com/dedbot365/github-status">
-    </a>
-
-  <img src="assets/Streaks/streak-smart.svg" alt="GitHub Streak" />
-  
+<p align="center">
+  <strong>3. GitHub Classic</strong><br/>
+  <img src="assets/Streaks/streak-github.svg" alt="GitHub Classic Streak">
 </p>
 
 ---
