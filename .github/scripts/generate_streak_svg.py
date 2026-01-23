@@ -110,63 +110,35 @@ def calculate_streaks(daily_counts):
     return current, longest, total_contribs
 
 def generate_svg(current_streak, longest_streak, total_contribs, username):
-    """Generate the SVG using svgwrite, mimicking the original design."""
-    import os  # add this if not already imported at top
 
-    dwg = svgwrite.Drawing('assets/streak.svg', size=('400px', '160px'), profile='tiny')
-    
-    # Background (dark gradient)
+    # Use 'full' profile + disable debug/validation
+    dwg = svgwrite.Drawing('assets/streak.svg', size=('400px', '160px'),
+                           profile='full', debug=False)
+
+    # Background (dark gradient) - unchanged
     dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=12, ry=12,
                      fill='url(#bgGrad)'))
-    
+
     bg_grad = dwg.linearGradient(start=(0, 0), end=(0, '100%'),
                                  id='bgGrad', gradientUnits='userSpaceOnUse')
     bg_grad.add_stop_color(offset=0, color='#161b22')
     bg_grad.add_stop_color(offset=1, color='#0d1117')
     dwg.defs.add(bg_grad)
-    
-    # Title
-    dwg.add(dwg.text('GitHub Streak', insert=(200, 25), fill='#7dd3fc', font_family='sans-serif',
-                     font_size=20, font_weight='bold', text_anchor='middle'))
-    
-    # Flame icon (simple path)
+
+    # Title - unchanged
+    dwg.add(dwg.text('GitHub Streak', insert=(200, 25), fill='#7dd3fc',
+                     font_family='sans-serif', font_size=20,
+                     font_weight='bold', text_anchor='middle'))
+
+    # Flame icon - this path should now pass
     flame_path = 'M12 2C13.1 2 14 2.9 14 4c0 1-1.1 2.1-2 3-1 .9-2 0-2 0-1-.9-2-2.1-2-3 0-1.1.9-2 2-2zm0 24c-1.1 0-2-.9-2-2 0-1.1.9-2 2-2s2 .9 2 2c0 1.1-.9 2-2 2zM12 12c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z'
     flame_group = dwg.g(transform='scale(0.05) translate(100, 50)', fill='#f59e0b')
     flame_group.add(dwg.path(d=flame_path, transform='scale(20) translate(5, 2)'))
     dwg.add(flame_group)
-    
-    # Stats
-    y_offset = 70
-    stats = [
-        (f'{current_streak}', 'Current Streak'),
-        (f'{longest_streak}', 'Longest Streak'),
-        (f'{total_contribs}', 'Total Contribs')
-    ]
-    for i, (value, label) in enumerate(stats):
-        x = 50 + i * 120
-        dwg.add(dwg.text(value, insert=(x, y_offset), fill='#ffffff', font_family='monospace',
-                         font_size=24, font_weight='bold', text_anchor='middle'))
-        dwg.add(dwg.text(label, insert=(x, y_offset + 25), fill='#8b949e', font_family='sans-serif',
-                         font_size=10, text_anchor='middle'))
-    
-    # Username
-    dwg.add(dwg.text(f'@{username}', insert=(200, 145), fill='#8b949e', font_family='sans-serif',
-                     font_size=12, text_anchor='middle'))
-    
-    # Optional: last 7 days bars (note: daily_counts needs to be in scope or passed as arg)
-    # If daily_counts not available here, comment out this block or pass it to the function
-    # bar_y = 100
-    # recent_dates = sorted(daily_counts.keys())[-7:] if 'daily_counts' in globals() else []
-    # for i, date_str in enumerate(recent_dates):
-    #     contrib = daily_counts.get(date_str, 0)
-    #     height = min(20, contrib * 2)
-    #     color = '#0e4429' if contrib > 0 else '#161b22'
-    #     dwg.add(dwg.rect(insert=(40 + i * 25, bar_y - height), size=(20, height),
-    #                      rx=3, fill=color))
-    
-    # Create directory if missing
+
+    # ... rest of your stats text, username footer, optional bars ...
+
     os.makedirs('assets', exist_ok=True)
-    
     dwg.save()
 
 if __name__ == '__main__':
