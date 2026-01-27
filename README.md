@@ -34,7 +34,7 @@ You can easily add these stats to your **GitHub Profile README** using this temp
 ## Step 1: Create Your Repository from This Template
 
 1. Click **Use this template** at the top of this repository.
-2. Give your new repository a name (e.g., `github-streak-stats`).
+2. Give your new repository a name (e.g., `github-streaks`).
 3. Go to the **Actions** tab in your new repository.
 4. Click **"I understand my workflows, go ahead and enable them"**.
 5. *(Optional)* Manually trigger the **"Update Streak Stats"** workflow once to generate your first set of images immediately.
