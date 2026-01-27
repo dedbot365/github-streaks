@@ -25,43 +25,40 @@ These stats are generated automatically every day. All themes are **Adaptive**, 
 
 ---
 
-
 ## How to Add This to Your Profile
 
-You can easily add these stats to your **GitHub Profile README**.
+You can easily add these stats to your **GitHub Profile README** using this template repository.
 
 ---
 
-## Step 1: Fork & Setup
+## Step 1: Create Your Repository from This Template
 
-1. Fork this repository to your own account.
-2. Go to the **Actions** tab in your forked repo.
-3. Click **"I understand my workflows, go ahead and enable them"**.
-4. *(Optional)* Manually trigger the **"Update Streak Stats"** workflow once to generate your first set of images immediately.
+1. Click **Use this template** at the top of this repository.
+2. Give your new repository a name (e.g., `github-streak-stats`).
+3. Go to the **Actions** tab in your new repository.
+4. Click **"I understand my workflows, go ahead and enable them"**.
+5. *(Optional)* Manually trigger the **"Update Streak Stats"** workflow once to generate your first set of images immediately.
+
+> ✅ **Note:** Unlike forks, repositories created from this template are fully independent and will update automatically every day.
 
 ---
 
-## Step 2: Add to Your Profile
+## Step 2: Add the Stats to Your Profile
 
 Copy the code below and paste it into your profile's `README.md`.
 
-**Important:** Replace `YOUR_USERNAME` with your actual GitHub username.
-
----
-
 ### Option A: Markdown (Simple)
 ```md
-![My GitHub Streak](https://github.com/YOUR_USERNAME/githubstatuscomponents/blob/main/assets/Streaks/streak-ocean.svg?raw=true)
+![My GitHub Streak](https://github.com/YOUR_USERNAME/github-streaks/blob/main/assets/Streaks/streak-ocean.svg?raw=true)
 ```
----
 
 ### Option B: HTML (Centered & Resizable)
-
 ```md
 <p align="center">
-  <img src="https://github.com/YOUR_USERNAME/githubstatuscomponents/blob/main/assets/Streaks/streak-ocean.svg?raw=true" alt="GitHub Streak" />
+  <img src="https://github.com/YOUR_USERNAME/github-streaks/blob/main/assets/Streaks/streak-ocean.svg?raw=true" alt="GitHub Streak" />
 </p>
 ```
+
 ---
 
 ## Configuration
@@ -75,8 +72,6 @@ Copy the code below and paste it into your profile's `README.md`.
 ## Available Themes
 
 Change the filename in the URL to switch themes:
-
-- streak-ocean-blue-dark.svg
-- streak-ocean-blue-light.svg
-- streak-emerald-forest-dark.svg
-- streak-mint-breeze-light.svg
+- streak-ocean.svg
+- streak-forest.svg
+- streak-gith
